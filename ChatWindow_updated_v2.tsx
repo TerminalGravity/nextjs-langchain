@@ -6,6 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useChat } from "ai/react";
 import { useRef, useState, useEffect, ReactElement } from "react";
 import type { FormEvent } from "react";
+import type { AgentStep } from "langchain/schema";
 
 import { ChatMessageBubble } from "@/components/ChatMessageBubble";
 import { UploadDocumentsForm } from "@/components/UploadDocumentsForm";
@@ -25,21 +26,7 @@ export function ChatWindow(props: {
 }) {
   const messageContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const [selectedEndpoint, setSelectedEndpoint] = useState(props.endpoint);
-
-  const featureEndpoints = {
-    "retrieval": "/api/chat/retrieval/route",
-    "agents": "/api/chat/agents/route",
-    "retrieval_agents": "/api/chat/retrieval_agents/route",
-    "structured_output": "/api/chat/structured_output/route",
-   
-  };
-  
-  const onFeatureSelect = (feature: string) => {
-    setSelectedEndpoint(featureEndpoints[feature]);
-  };
-
-
+  const onFeatureSelect = (feature: string) => { /* Implement feature selection logic here */ };
   const { endpoint, emptyStateComponent, placeholder, titleText = "An LLM", showIngestForm, showIntermediateStepsToggle, emoji } = props;
 
   const [selectedFeature, setSelectedFeature] = useState('Structured Output');
@@ -56,14 +43,21 @@ export function ChatWindow(props: {
 
   const { messages, input, setInput, handleInputChange, handleSubmit, isLoading: chatEndpointIsLoading, setMessages } =
     useChat({
-      api: selectedEndpoint,
+      api: endpoint,
       onError: (e) => {
         toast(e.message, {
           theme: "dark"
         });
       }
     });
+  // components/ChatWindow.tsx
 
+// Define the onFeatureSelect function
+  const onFeatureSelect = (feature) => {
+    console.log(`Selected feature: ${feature}`);
+  };
+
+// 
   async function sendMessage(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (messageContainerRef.current) {
@@ -102,13 +96,14 @@ export function ChatWindow(props: {
     <div className="chat-window">
       <div className="chat-header">
         <h2>{titleText}</h2>
-        <div className="dropdowns" style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "10px 0", width: "auto", margin: "0 auto" }}>
-          <ModelSelectionDropdown />
-          <div style={{ width: "10px" }}></div>
-          <FeatureSelectionDropdown selectedFeature={selectedFeature} setSelectedFeature={setSelectedFeature} onFeatureSelect={onFeatureSelect} />
+        <div className="dropdowns">
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+        <ModelSelectionDropdown />
+        <FeatureSelectionDropdown onFeatureSelect={onFeatureSelect} />
+      </div>
+          <FeatureSelectionDropdown selectedFeature={selectedFeature} setSelectedFeature={setSelectedFeature} />
         </div>
       </div>
-
       <div className="message-container" ref={messageContainerRef}>
         {messages.length === 0 && emptyStateComponent}
         {messages.map((message, index) => (
